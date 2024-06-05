@@ -6,7 +6,7 @@ public class Token {
 
     private String value;
 
-    private String type;
+    private TokenType type;
 
     @Override
     public String toString() {
@@ -14,7 +14,7 @@ public class Token {
 
     }
 
-    public Token(int number, String value, String type) {
+    public Token(int number, String value, TokenType type) {
         this.number = number;
         this.value = value;
         this.type = type;
@@ -36,11 +36,11 @@ public class Token {
         this.value = value;
     }
 
-    public String getType() {
+    public TokenType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(TokenType type) {
         this.type = type;
     }
 

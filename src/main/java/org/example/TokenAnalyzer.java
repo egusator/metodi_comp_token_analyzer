@@ -67,7 +67,7 @@ public class TokenAnalyzer {
 
         sourceCode = code;
 
-        for (indexInCode = 0; indexInCode < code.length();) {
+        for (indexInCode = 0; indexInCode < code.length(); ) {
             Character c = code.charAt(indexInCode);
 
             if (currentState == State.Z)
@@ -698,7 +698,7 @@ public class TokenAnalyzer {
                     }
                     case BIN_OP -> {
                         currentState = State.Z;
-                        prog21();
+                        prog20();
                     }
                 }
             }
@@ -723,47 +723,47 @@ public class TokenAnalyzer {
     }
 
     private static void prog3() {
-        tokens.add(new Token(tokenNumber++, "(", "круглая открывающая скобка"));
+        tokens.add(new Token(tokenNumber++, "(", TokenType.LEFT_ROUND_BR));
         indexInCode++;
     }
 
     private static void prog4() {
-        tokens.add(new Token(tokenNumber++, ")", "круглая закрывающая скобка"));
+        tokens.add(new Token(tokenNumber++, ")", TokenType.RIGHT_ROUND_BR));
         indexInCode++;
     }
 
     private static void prog5() {
-        tokens.add(new Token(tokenNumber++, "&", "конъюнкция"));
+        tokens.add(new Token(tokenNumber++, "&", TokenType.AND));
         indexInCode++;
     }
 
     private static void prog6() {
-        tokens.add(new Token(tokenNumber++, "|", "дизъюнкция"));
+        tokens.add(new Token(tokenNumber++, "|", TokenType.OR));
         indexInCode++;
     }
 
     private static void prog7() {
-        tokens.add(new Token(tokenNumber++, ";", "точка с запятой"));
+        tokens.add(new Token(tokenNumber++, ";", TokenType.DOT_COMMA));
         indexInCode++;
     }
 
     private static void prog8() {
-        tokens.add(new Token(tokenNumber++, "{", "фигурная открывающая скобка"));
+        tokens.add(new Token(tokenNumber++, "{", TokenType.LEFT_FIG_BR));
         indexInCode++;
     }
 
     private static void prog9() {
-        tokens.add(new Token(tokenNumber++, "}", "фигурная закрывающая скобка"));
+        tokens.add(new Token(tokenNumber++, "}", TokenType.RIGHT_FIG_BR));
         indexInCode++;
     }
 
     private static void prog10() {
-        tokens.add(new Token(tokenNumber++, "[", "квадратная открывающая скобка"));
+        tokens.add(new Token(tokenNumber++, "[", TokenType.LEFT_SQR_BR));
         indexInCode++;
     }
 
     private static void prog11() {
-        tokens.add(new Token(tokenNumber++, "]", "квадратная закрывающая скобка"));
+        tokens.add(new Token(tokenNumber++, "]", TokenType.RIGHT_SQR_BR));
         indexInCode++;
     }
 
@@ -777,9 +777,32 @@ public class TokenAnalyzer {
     }
 
     private static void prog14() {
-        String type = tokenType.get(stringBuffer);
-        if (type == null)
-            type = "имя идентификатора";
+        TokenType type = null;
+        if (stringBuffer.equals("if")) {
+            type = TokenType.IF;
+        } else if (stringBuffer.equals("boolean")) {
+            type = TokenType.BOOLEAN;
+        } else if (stringBuffer.equals("while")) {
+            type = TokenType.WHILE;
+        } else if (stringBuffer.equals("else")) {
+            type = TokenType.ELSE;
+        } else if (stringBuffer.equals("scan")) {
+            type = TokenType.SCAN;
+        } else if (stringBuffer.equals("print")) {
+            type = TokenType.PRINT;
+        } else if (stringBuffer.equals("true")) {
+            type = TokenType.TRUE;
+        } else if (stringBuffer.equals("false")) {
+            type = TokenType.FALSE;
+        } else if (stringBuffer.equals("new")) {
+            type = TokenType.NEW;
+        } else if (stringBuffer.equals("int")) {
+            type = TokenType.INT;
+        } else if (stringBuffer.equals("double")) {
+            type = TokenType.DOUBLE;
+        } else {
+            type = TokenType.VARIABLE;
+        }
         tokens.add(new Token(tokenNumber++, stringBuffer, type));
         indexInCode++;
     }
@@ -790,7 +813,7 @@ public class TokenAnalyzer {
     }
 
     private static void prog16() {
-        tokens.add(new Token(tokenNumber++, String.valueOf(numberBuffer), "целое число"));
+        tokens.add(new Token(tokenNumber++, String.valueOf(numberBuffer), TokenType.CONST));
         indexInCode++;
     }
 
@@ -807,24 +830,59 @@ public class TokenAnalyzer {
     }
 
     private static void prog19() {
-        tokens.add(new Token(tokenNumber++, String.valueOf(doubleBuffer), "число с плавающей точкой"));
+        tokens.add(new Token(tokenNumber++, String.valueOf(doubleBuffer), TokenType.CONST));
         indexInCode++;
     }
 
     private static void prog20() {
-        tokens.add(new Token(tokenNumber++, stringBuffer, tokenType.get(stringBuffer)));
+        TokenType type = null;
+        if (stringBuffer.equals("+")) {
+            type = TokenType.PLUS;
+        } else if (stringBuffer.equals("-")) {
+            type = TokenType.MINUS;
+        } else if (stringBuffer.equals("*")) {
+            type = TokenType.MULTIPLY;
+        } else if (stringBuffer.equals("/")) {
+            type = TokenType.DIV;
+        } else if (stringBuffer.equals(">")) {
+            type = TokenType.GREATER;
+        } else if (stringBuffer.equals("<")) {
+            type = TokenType.LESS;
+        } else if (stringBuffer.equals("!")) {
+            type = TokenType.NOT;
+        } else if (stringBuffer.equals("=")) {
+            type = TokenType.ASSIGNMENT;
+        }
+        tokens.add(new Token(tokenNumber++, stringBuffer, type));
         indexInCode++;
     }
 
     private static void prog21() {
         stringBuffer += String.valueOf(sourceCode.charAt(indexInCode));
-        tokens.add(new Token(tokenNumber++, stringBuffer, tokenType.get(stringBuffer)));
+        TokenType type = null;
+        if (stringBuffer.equals("+=")) {
+            type = TokenType.PLUS_EQUALS;
+        } else if (stringBuffer.equals("-=")) {
+            type = TokenType.MINUS_EQUALS;
+        } else if (stringBuffer.equals("*=")) {
+            type = TokenType.MULTIPLY_EQUALS;
+        } else if (stringBuffer.equals("/=")) {
+            type = TokenType.DIV_EQUALS;
+        } else if (stringBuffer.equals(">=")) {
+            type = TokenType.GREATER_EQUALS;
+        } else if (stringBuffer.equals("<=")) {
+            type = TokenType.LESS_EQUALS;
+        } else if (stringBuffer.equals("!=")) {
+            type = TokenType.NOT_EQUALS;
+        } else if (stringBuffer.equals("==")) {
+            type = TokenType.EQUALS;
+        }
+        tokens.add(new Token(tokenNumber++, stringBuffer, type));
         indexInCode++;
     }
 
     private static void prog22() {
-        tokens.add(new Token(tokenNumber++, ",", "запятая"));
+        tokens.add(new Token(tokenNumber++, ",", TokenType.COMMA));
         indexInCode++;
     }
-
 }
