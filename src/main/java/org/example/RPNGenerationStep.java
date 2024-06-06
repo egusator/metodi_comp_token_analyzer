@@ -6,15 +6,15 @@ public class RPNGenerationStep {
 
     @Override
     public String toString() {
-//        if (type == RPNGenerationStepType.SKIP) {
-//            return "skip";
-//        } else if (type == RPNGenerationStepType.VARIABLE) {
-//            return "a";
-//        } else if (type == RPNGenerationStepType.CONST) {
-//            return "k";
-//        } else return value;
-        return "{" + type +
-                ", " + value + "}";
+        if (type == RPNGenerationStepType.SKIP) {
+            return "skip";
+        } else if (type == RPNGenerationStepType.VARIABLE) {
+            return "a";
+        } else if (type == RPNGenerationStepType.CONST) {
+            return "k";
+        } else return value;
+//        return "{" + type +
+//                ", " + value + "}";
     }
 
     public RPNGenerationStepType getType() {

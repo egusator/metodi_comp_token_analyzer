@@ -24,38 +24,8 @@ public class TokenAnalyzer {
 
     private static List<Token> tokens;
 
-    private static HashMap<String, String> tokenType;
-
     static {
         tokens = new ArrayList<Token>();
-        tokenType = new HashMap<String, String>();
-        tokenType.put("=", "присваивание");
-        tokenType.put("-", "вычитание");
-        tokenType.put("+", "сложение");
-        tokenType.put("*", "умножение");
-        tokenType.put("/", "деление");
-        tokenType.put(">", "больше");
-        tokenType.put("<", "меньше");
-        tokenType.put("!", "отрицание");
-        tokenType.put("==", "сравнение");
-        tokenType.put("-=", "минусравно");
-        tokenType.put("+=", "плюсравно");
-        tokenType.put("*=", "умножравно");
-        tokenType.put("/=", "делравно");
-        tokenType.put(">=", "большеравно");
-        tokenType.put("<=", "меньшеравно");
-        tokenType.put("!=", "не равно");
-        tokenType.put("if", "if");
-        tokenType.put("else", "else");
-        tokenType.put("while", "while");
-        tokenType.put("scan", "scan");
-        tokenType.put("print", "print");
-        tokenType.put("int", "int");
-        tokenType.put("double", "double");
-        tokenType.put("boolean", "boolean");
-        tokenType.put("new", "new");
-        tokenType.put("true", "true");
-        tokenType.put("false", "false");
     }
 
 
