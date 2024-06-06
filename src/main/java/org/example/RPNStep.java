@@ -1,21 +1,26 @@
 package org.example;
 
 public class RPNStep {
-    private RPNElementType type;
+    private RPNStepType rpnStepType;
     private String value;
+
+    public RPNStep(RPNStepType rpnStepType, String value) {
+        this.rpnStepType = rpnStepType;
+        this.value = value;
+    }
 
     @Override
     public String toString() {
-        return "{" + type +
+        return "{" + rpnStepType +
                 ", " + value + "}";
     }
 
-    public RPNElementType getType() {
-        return type;
+    public RPNStepType getRpnStepType() {
+        return rpnStepType;
     }
 
-    public void setType(RPNElementType type) {
-        this.type = type;
+    public void setRpnStepType(RPNStepType rpnStepType) {
+        this.rpnStepType = rpnStepType;
     }
 
     public String getValue() {
@@ -23,11 +28,6 @@ public class RPNStep {
     }
 
     public void setValue(String value) {
-        this.value = value;
-    }
-
-    public RPNStep(RPNElementType type, String value) {
-        this.type = type;
         this.value = value;
     }
 }

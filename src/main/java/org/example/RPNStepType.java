@@ -1,0 +1,5 @@
+package org.example;
+
+public enum RPNStepType {
+    INT_VARIABLE, DOUBLE_VARIABLE, BOOLEAN_VARIABLE, OPERATION, MARKER, CONST
+}

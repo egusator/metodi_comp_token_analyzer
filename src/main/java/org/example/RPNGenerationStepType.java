@@ -1,5 +1,5 @@
 package org.example;
 
-public enum RPNElementType {
+public enum RPNGenerationStepType {
     PROGRAM, CONST, VARIABLE, SKIP, OPERATION
 }
