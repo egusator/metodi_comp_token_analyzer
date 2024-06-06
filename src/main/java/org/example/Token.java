@@ -20,6 +20,12 @@ public class Token {
         this.type = type;
     }
 
+    public Token(Token t) {
+        this.number = t.number;
+        this.value = t.value;
+        this.type = t.type;
+    }
+
     public int getNumber() {
         return number;
     }

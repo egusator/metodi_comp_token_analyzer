@@ -9,8 +9,6 @@ public class RPNGenerator {
 
     private static int markerNumber = 0;
 
-    private static int whileLastMarkerNumber;
-
     private static Map<TableType, List<String>> variableTables;
 
     private static Map<String, Runnable> programs;
@@ -49,7 +47,7 @@ public class RPNGenerator {
         initPrograms();
     }
 
-    public static List<RPNStep> generateRpnFromTokensList(Stack<Token> userInput) throws InterruptedException {
+    public static GeneratorResponseBody generateRpnFromTokensList(Stack<Token> userInput) throws InterruptedException {
 
         resultRPN = new ArrayList<>();
 
@@ -77,8 +75,9 @@ public class RPNGenerator {
 
                 if (!userInput.isEmpty() && currentToken.getType() == terminal.getValue()) {
                     currentToken = userInput.pop();
-                    if (currentToken.getType() == TokenType.VARIABLE)
-                        prevVariable = currentToken;
+                    if (currentToken.getType() == TokenType.VARIABLE) {
+                        prevVariable = new Token(currentToken);
+                    }
                 }
             } else {
                 NonTerminal nonTerminal = (NonTerminal) magElement;
@@ -98,7 +97,14 @@ public class RPNGenerator {
             }
         }
         System.out.println(markerValues);
-        return resultRPN;
+
+        Stack<RPNStep> stepStack = new Stack<>();
+
+        for (int i = resultRPN.size() - 1; i >= 0; i--) {
+            stepStack.add(resultRPN.get(i));
+        }
+
+        return new GeneratorResponseBody(stepStack, variableTables, markerValues);
     }
 
     private static void performSemanticForGen(RPNGenerationStep step) {
@@ -225,7 +231,6 @@ public class RPNGenerator {
 
         programs.put("16", () -> {
             List<String> table = variableTables.get(CURRENT_TABLE_TYPE);
-            RPNStep prevVariable = resultRPN.get(resultRPN.size() - 1);
             if (table.contains(prevVariable.getValue())) {
                 throw new RuntimeException("This variable already defined");
             } else {
