@@ -808,7 +808,9 @@ public class TokenAnalyzer {
     }
 
     private static void prog15() {
-        numberBuffer += numberBuffer * 10 + Character.getNumericValue(sourceCode.charAt(indexInCode));
+        Character character = sourceCode.charAt(indexInCode);
+        Integer num = Character.getNumericValue(character);
+        numberBuffer = numberBuffer * 10 + Character.getNumericValue(sourceCode.charAt(indexInCode));
         indexInCode++;
     }
 

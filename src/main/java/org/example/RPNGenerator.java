@@ -2,6 +2,8 @@ package org.example;
 
 import java.util.*;
 
+import static java.lang.Thread.sleep;
+
 public class RPNGenerator {
 
     private static Stack<RPNGenerationStep> generationSteps;
@@ -17,9 +19,9 @@ public class RPNGenerator {
 
     private static List<RPNStep> resultRPN;
 
-    private static List<Token> input;
-
     private static Token currentToken;
+
+    private static Token prevVariable;
 
     private static Stack<MagElement> mag;
 
@@ -35,48 +37,47 @@ public class RPNGenerator {
         initPrograms();
     }
 
-    public static List<RPNStep> generateRpnFromTokensList(List<Token> userInput) {
+    public static List<RPNStep> generateRpnFromTokensList(Stack<Token> userInput) throws InterruptedException {
 
         resultRPN = new ArrayList<>();
+
         mag = new Stack<>();
 
         mag.add(new NonTerminal(CFGState.B));
 
         generationSteps = new Stack<>();
 
-        Boolean flag = false;
-        input = userInput;
-
-        for (int i = 0; i < input.size() || !generationSteps.empty() || !mag.empty(); ) {
-            if (i < input.size())
-                currentToken = userInput.get(i);
+        currentToken = userInput.pop();
+        for (int i = 0; !mag.empty(); ) {
+            System.out.println();
+            System.out.println("input:" + userInput);
+            System.out.println("mag: " + mag);
+            System.out.println("steps: " + generationSteps);
+            System.out.println("result: " + resultRPN);
+            System.out.println("current token: " + currentToken);
 
             MagElement magElement = mag.pop();
 
             if (magElement.isTerminal()) {
                 Terminal terminal = (Terminal) magElement;
 
-                if (currentToken.getType() == terminal.getValue()) {
-                    i++;
+                if (!userInput.isEmpty() && currentToken.getType() == terminal.getValue()) {
+                    currentToken = userInput.pop();
+                    if (currentToken.getType() == TokenType.VARIABLE)
+                        prevVariable = currentToken;
                 }
             } else {
                 NonTerminal nonTerminal = (NonTerminal) magElement;
+                System.out.println("это было с " + nonTerminal.getValue());
                 Runnable runnable = generationTable.get(nonTerminal.getValue()).get(currentToken.getType());
                 if (runnable != null)
                     runnable.run();
             }
-            RPNGenerationStep step = null;
-            if (flag) {
-                step = generationSteps.pop();
-            } else {
-                flag = true;
-            }
 
-            System.out.println("mag: " + mag);
-            System.out.println("steps: " + generationSteps);
-            System.out.println("result: " + resultRPN);
-            System.out.println("current token: " + currentToken);
-            System.out.println();
+            RPNGenerationStep step = null;
+            if (!generationSteps.isEmpty())
+                step = generationSteps.pop();
+
 
             if (step != null && step.getType() != RPNGenerationStepType.SKIP) {
                 performSemanticForGen(step);
@@ -95,13 +96,13 @@ public class RPNGenerator {
         } else if (step.getType() == RPNGenerationStepType.VARIABLE) {
             switch (CURRENT_TABLE_TYPE) {
                 case INT -> {
-                    resultRPN.add(new RPNStep(RPNStepType.INT_VARIABLE, currentToken.getValue()));
+                    resultRPN.add(new RPNStep(RPNStepType.INT_VARIABLE, prevVariable.getValue()));
                 }
                 case DOUBLE -> {
-                    resultRPN.add(new RPNStep(RPNStepType.DOUBLE_VARIABLE, currentToken.getValue()));
+                    resultRPN.add(new RPNStep(RPNStepType.DOUBLE_VARIABLE, prevVariable.getValue()));
                 }
                 case BOOLEAN -> {
-                    resultRPN.add(new RPNStep(RPNStepType.BOOLEAN_VARIABLE, currentToken.getValue()));
+                    resultRPN.add(new RPNStep(RPNStepType.BOOLEAN_VARIABLE, prevVariable.getValue()));
                 }
             }
         } else if (step.getType() == RPNGenerationStepType.OPERATION) {
@@ -586,11 +587,28 @@ public class RPNGenerator {
 
         generationTable.get(CFGState.J).put(
                 TokenType.VARIABLE, () -> {
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.VARIABLE, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    mag.add(new NonTerminal(CFGState.L));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.VARIABLE, null));
+
+                    mag.add(new NonTerminal(CFGState.X));
+                    mag.add(new NonTerminal(CFGState.Y));
 
                     mag.add(new Terminal(TokenType.VARIABLE));
+                }
+        );
+
+        generationTable.get(CFGState.J).put(
+                TokenType.LEFT_ROUND_BR, () -> {
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
+                    mag.add(new NonTerminal(CFGState.L));
+                    mag.add(new Terminal(TokenType.RIGHT_ROUND_BR));
+                    mag.add(new NonTerminal(CFGState.J));
+                    mag.add(new Terminal(TokenType.LEFT_ROUND_BR));
                 }
         );
 
@@ -598,18 +616,8 @@ public class RPNGenerator {
                 TokenType.CONST, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.CONST, null));
 
-                    mag.add(new NonTerminal(CFGState.N));
-                    mag.add(new NonTerminal(CFGState.U));
-                    mag.add(new NonTerminal(CFGState.T));
-                    mag.add(new NonTerminal(CFGState.V));
-                    mag.add(new NonTerminal(CFGState.W));
                     mag.add(new NonTerminal(CFGState.X));
                     mag.add(new NonTerminal(CFGState.Y));
 
@@ -679,6 +687,7 @@ public class RPNGenerator {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
                     mag.add(new NonTerminal(CFGState.N));
                     mag.add(new NonTerminal(CFGState.U));
                     mag.add(new NonTerminal(CFGState.T));
@@ -694,14 +703,15 @@ public class RPNGenerator {
         generationTable.get(CFGState.L).put(
                 TokenType.MINUS, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "-"));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
 
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
                     mag.add(new NonTerminal(CFGState.N));
                     mag.add(new NonTerminal(CFGState.U));
                     mag.add(new NonTerminal(CFGState.T));
@@ -717,6 +727,7 @@ public class RPNGenerator {
         generationTable.get(CFGState.L).put(
                 TokenType.MULTIPLY, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "*"));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
 
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
@@ -725,7 +736,7 @@ public class RPNGenerator {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
                     mag.add(new NonTerminal(CFGState.N));
                     mag.add(new NonTerminal(CFGState.U));
                     mag.add(new NonTerminal(CFGState.T));
@@ -742,7 +753,6 @@ public class RPNGenerator {
         generationTable.get(CFGState.L).put(
                 TokenType.DIV, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "/"));
-
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
@@ -760,7 +770,7 @@ public class RPNGenerator {
                     mag.add(new NonTerminal(CFGState.X));
                     mag.add(new NonTerminal(CFGState.Y));
                     mag.add(new NonTerminal(CFGState.J));
-                    mag.add(new Terminal(TokenType.MULTIPLY));
+                    mag.add(new Terminal(TokenType.DIV));
                 }
         );
 
@@ -824,14 +834,14 @@ public class RPNGenerator {
 
         generationTable.get(CFGState.L).put(
                 TokenType.OR, () -> {
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "&"));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "|"));
 
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     mag.add(new NonTerminal(CFGState.N));
                     mag.add(new NonTerminal(CFGState.U));
-                    mag.add(new NonTerminal(CFGState.T));
+                    mag.add(new NonTerminal(CFGState.J));
 
                     mag.add(new Terminal(TokenType.OR));
                 }
@@ -1107,9 +1117,10 @@ public class RPNGenerator {
 
         generationTable.get(CFGState.W).put(
                 TokenType.LESS, () -> {
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "<"));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
                     mag.add(new NonTerminal(CFGState.W));
                     mag.add(new NonTerminal(CFGState.J));
 
@@ -1120,9 +1131,10 @@ public class RPNGenerator {
 
         generationTable.get(CFGState.W).put(
                 TokenType.GREATER_EQUALS, () -> {
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, ">="));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
                     mag.add(new NonTerminal(CFGState.W));
                     mag.add(new NonTerminal(CFGState.J));
 
@@ -1133,9 +1145,10 @@ public class RPNGenerator {
 
         generationTable.get(CFGState.W).put(
                 TokenType.LESS_EQUALS, () -> {
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "<="));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
                     mag.add(new NonTerminal(CFGState.W));
                     mag.add(new NonTerminal(CFGState.J));
 
@@ -1149,12 +1162,15 @@ public class RPNGenerator {
         generationTable.get(CFGState.X).put(
                 TokenType.PLUS, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "+"));
+
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
+
                     mag.add(new NonTerminal(CFGState.X));
                     mag.add(new NonTerminal(CFGState.J));
 
-                    mag.add(new Terminal(TokenType.GREATER));
+                    mag.add(new Terminal(TokenType.PLUS));
 
                 }
         );
@@ -1164,6 +1180,8 @@ public class RPNGenerator {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "-"));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
+
+
                     mag.add(new NonTerminal(CFGState.X));
                     mag.add(new NonTerminal(CFGState.J));
 
@@ -1177,13 +1195,16 @@ public class RPNGenerator {
         generationTable.get(CFGState.Y).put(
                 TokenType.MULTIPLY, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "*"));
+
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    mag.add(new NonTerminal(CFGState.X));
+
+
+                    mag.add(new NonTerminal(CFGState.Y));
 
                     mag.add(new NonTerminal(CFGState.J));
 
-                    mag.add(new Terminal(TokenType.MINUS));
+                    mag.add(new Terminal(TokenType.MULTIPLY));
 
                 }
         );
@@ -1191,12 +1212,15 @@ public class RPNGenerator {
         generationTable.get(CFGState.Y).put(
                 TokenType.DIV, () -> {
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.OPERATION, "/"));
+
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
                     generationSteps.add(new RPNGenerationStep(RPNGenerationStepType.SKIP, null));
-                    mag.add(new NonTerminal(CFGState.X));
+
+
+                    mag.add(new NonTerminal(CFGState.Y));
                     mag.add(new NonTerminal(CFGState.J));
 
-                    mag.add(new Terminal(TokenType.GREATER));
+                    mag.add(new Terminal(TokenType.DIV));
 
                 }
         );

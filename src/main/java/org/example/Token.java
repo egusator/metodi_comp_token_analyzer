@@ -10,7 +10,7 @@ public class Token {
 
     @Override
     public String toString() {
-        return "" + value + '\n';
+        return "{" + type + ", " + value + '}';
 
     }
 
